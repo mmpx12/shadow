@@ -34,6 +34,7 @@
 #include "shadowlog.h"
 #include "string/strcmp/streq.h"
 #include "string/strtok/stpsep.h"
+#include "chkhash.h"
 
 
 #define IS_CRYPT_METHOD(str) ((crypt_method != NULL && streq(crypt_method, str)) ? true : false)
@@ -554,6 +555,21 @@ int main (int argc, char **argv)
 		} else
 #endif				/* USE_PAM */
 		{
+
+		/*
+		 * Prevent adding a non valid hash to /etc/shadow and
+		 * potentialy lock account
+		 */
+
+		if (eflg) {
+			if (!is_valid_hash(newpwd)) {
+				fprintf (stderr,
+					_("%s: (line: %jd) invalid password hash for user '%s'\n"),
+					Prog, line, name);
+				errors = true;
+				continue;
+			}
+		}
 		const struct spwd *sp;
 		struct spwd newsp;
 		const struct passwd *pw;
